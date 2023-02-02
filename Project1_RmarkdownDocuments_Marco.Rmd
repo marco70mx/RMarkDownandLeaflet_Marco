@@ -1,0 +1,42 @@
+---
+title: "Project_R_MarkdownandLeaflet"
+author: "Marco Antonio Lopez"
+date: "2023-02-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Project 1 Marco Lopez
+
+Create a web page using R Markdown that features a map created with Leaflet. 
+
+Host your webpage on either GitHub Pages, RPubs, or NeoCities.
+
+Your webpage must contain the date that you created the document, and it must contain a map created with Leaflet. We would love to see you show off your creativity! 
+
+First Step: Install leaflet
+install.packages("leaflet")
+
+```{r}
+library(leaflet)
+```
+
+## My Institution and my School
+
+```{r chunk 1}
+place <- c("Instituto de Geografia", "Facultad de Ingenieria")
+place_links <- c("<a href='https://www.geografia.unam.mx/geoigg/'>Geografia</a>", "<a href='https://www.ingenieria.unam.mx/'>Ingenieria</a>")
+lat <- c(19.32801, 19.33113)
+lng <- c(-99.17641, -99.18468)
+df <- data.frame(place, place_links, lat, lng)
+library(leaflet)
+df %>%
+  leaflet() %>%
+  addTiles() %>%
+  addMarkers(lat=lat, lng=lng, popup=place_links, clusterOptions=markerClusterOptions)
+
