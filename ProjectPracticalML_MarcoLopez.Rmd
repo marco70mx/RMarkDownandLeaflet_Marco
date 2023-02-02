@@ -1,0 +1,127 @@
+---
+title: "PracticalML_MarcoLopez"
+author: "Marco Antonio Lopez"
+date: "2022-12-07"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+Project Practical ML Marco Lopez
+
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it.
+
+In this project, we will use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants to predict the manner in which they did the exercise.
+
+## Load Librarys for the project
+
+
+```{r}
+library(caret)
+library(randomForest)
+
+
+```
+
+## Load Data and delete NA
+
+```{r}
+training.url <- 'http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv'
+test.cases.url <- 'http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv'
+
+downloadcsv <- function(url, nastrings) {
+    temp <- tempfile()
+    download.file(url, temp, method = "curl")
+    data <- read.csv(temp, na.strings = nastrings)
+    unlink(temp)
+    return(data)
+}
+
+train <- downloadcsv(training.url, c("", "NA", "#DIV/0!"))
+
+test <- downloadcsv(test.cases.url, c("", "NA", "#DIV/0!"))
+
+
+dim(train)
+
+table(train$classe)
+
+
+```
+
+##Validation and Selection
+
+```{r}
+set.seed(123456)
+trainset <- createDataPartition(train$classe, p = 0.8, list = FALSE)
+Training <- train[trainset, ]
+Validation <- train[-trainset, ]
+
+nonzerocol <- nearZeroVar(Training)
+Training <- Training[, -nonzerocol]
+
+countlength <- sapply(Training, function(x) {
+    sum(!(is.na(x) | x == ""))
+})
+
+nullCol <- names(countlength[countlength < 0.6 * length(Training$classe)])
+
+descriptcol <- c("X", "user_name", "raw_timestamp_part_1", "raw_timestamp_part_2", 
+    "cvtd_timestamp", "new_window", "num_window")
+
+excludecolumns <- c(descriptcol, nullCol)
+
+Training <- Training[, !names(Training) %in% excludecolumns]
+
+
+```
+
+
+## Model for this project
+
+```{r}
+rfModel <- randomForest(as.factor(classe)~ ., data = Training, importance = TRUE, ntrees = 10)
+
+ptraining <- predict(rfModel, Training)
+
+
+```
+
+## Validation and Test the model
+
+```{r}
+
+u1 <- union(ptraining,Training$classe)
+t1 <- table(factor(ptraining, u1), factor(Training$classe, u1))
+print(confusionMatrix(t1))
+
+pvalidation <- predict(rfModel, Validation)
+u2 <- union(pvalidation,Validation$classe)
+t2 <- table(factor(pvalidation, u2), factor(Validation$classe, u2))
+print(confusionMatrix(t2))
+
+ptest <- predict(rfModel, test)
+ptest
+
+```
+
+
+
+## Conclusions
+
+Taking into account the previous analyzes with the data and the proposed models; the result with the random forest model with cross validation, gives us an accurate result around 99%.
+
+## Acknowledgment
+
+Thank you for providing the data to: http://groupware.les.inf.puc-rio.br/har
+
+
+
+
